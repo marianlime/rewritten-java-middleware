@@ -5,8 +5,9 @@ import (
 	"net/http/httptest"
 	"os"
 	"testing"
+	"errors"
 	"time"
-	"github.com/golang-jwt/jwt"
+	"github.com/golang-jwt/jwt/v5"
 )
 
 func TestGenerateToken(t *testing.T) {
@@ -54,29 +55,37 @@ func TestGenerateTokenWithDifferentRoles(t *testing.T){
 
 func TestTokenExpiry(t *testing.T){
 	secretKey := "iJEwgdEGe2"
-	os.Setenv("secret_key", secretKey)
-	defer os.Unsetenv("secret_key")
+	t.Setenv("secret_key", secretKey)
+	
+
 	claims := CustomClaims{
 		Role: "admin",
-		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(1 * time.Second).Unix(),
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(
+				time.Now().Add(-time.Hour),
+			),	
 		},
 	}
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims, )
 	tokenString, err := token.SignedString([]byte(secretKey))
 	if err != nil{
 		t.Fatalf("Failed to sign token: %v", err)
 	}
-	time.Sleep(7 * time.Second)
+	
 
-	_, err = jwt.ParseWithClaims(tokenString, &CustomClaims{}, func(token *jwt.Token) (interface{}, error){
-		return []byte(secretKey), nil
-	})
-	if ve, ok := err.(*jwt.ValidationError); ok {
-		if ve.Errors&jwt.ValidationErrorExpired == 0 {
-			t.Fatalf("Expected token to be expired")
-		}
-	} else {
+	_, err = jwt.ParseWithClaims(
+		 tokenString,
+		 &CustomClaims{}, 
+		 func(token *jwt.Token) (any, error){
+			return []byte(secretKey), nil
+	},  
+	jwt.WithValidMethods([]string{
+		jwt.SigningMethodHS256.Alg(),
+	}),
+		jwt.WithExpirationRequired(),
+	)
+	if !errors.Is(err, jwt.ErrTokenExpired){
 		t.Fatalf("Expected token expiration error, got %v", err)
 	}
 	
@@ -120,5 +129,38 @@ func TestRoleMiddleware(t *testing.T) {
 			}
 		})
 	}
+}
 
+func TestAdminAuthorization(t *testing.T){
+	t.Setenv("secret_key", "this-is-a-test-secret-with-32-plus-bytes")
+
+	token, err := GenerateToken("admin")
+	if err != nil {
+		t.Fatalf("Failed to generate token: %v", err)
+	}
+
+	handler := RoleMiddleware("admin")(
+		func(w http.ResponseWriter, r *http.Request){
+			w.WriteHeader(http.StatusOK)
+		},
+	)
+
+	req := httptest.NewRequest(
+		http.MethodGet,
+		"/protected",
+		nil,
+	)
+
+	req.Header.Set("Authorization", "Bearer "+token)
+
+	recorder := httptest.NewRecorder()
+
+	handler(recorder, req)
+
+	if recorder.Code != http.StatusOK {
+		t.Fatalf(
+			"Expected 200 OK, got %d",
+			recorder.Code,
+		)
+	}
 }

@@ -1,31 +1,37 @@
 package main
 
 import (
-	"fmt"
 	"log"
-	"middleware/packages/authentication"
+	"time"
 	"middleware/packages/encryption"
-	"middleware/packages/logmon"
-	"middleware/proxy"
 	"net/http"
+	auth "middleware/packages/authentication"
 )
-
-func costumerEndpointHandler(w http.ResponseWriter, r  *http.Request){
-
-}
 
 func main(){
 	
 
-	key, err := encryption.KeyGenerator()
-	if err != nil {
-		log.Fatalf("Error generating key : %v", err)
+	mux := http.NewServeMux()
+	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request){
+		w.WriteHeader(http.StatusOK)
+	})
+	mux.HandleFunc("/protected",
+		auth.RoleMiddleware("admin")(
+			func(w http.ResponseWriter, r *http.Request){
+				w.WriteHeader(http.StatusOK)
+				w.Write([]byte("Authorized access"))
+			},
+		),
+	)
+
+	mux.HandleFunc("/encrypt", encryption.HandleEncryption)
+	
+	server := &http.Server{
+		Addr: ":8080",
+		Handler: mux,
+		ReadHeaderTimeout: 5 * time.Second,
 	}
 
-	encryptedData, err := encryption.DataEncryption([]byte(""), key)
-	if err != nil {
-		log.Fatalf("Error encrypting data: %v", err)
-	}
-	
-	http.HandleFunc("/encrypt", encryption.HandleEncryption)
+	log.Println("OpenSecure is listening on :8080")
+	log.Fatal(server.ListenAndServe())
 	}
