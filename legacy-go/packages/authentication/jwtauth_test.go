@@ -164,3 +164,42 @@ func TestAdminAuthorization(t *testing.T){
 		)
 	}
 }
+
+func TestViewerAuthorization(t *testing.T){
+	t.Setenv("secret_key", "this-is-a-secret-key-with-32-plus-bytes")
+
+	token, err := GenerateToken("viewer")
+	if err != nil{
+		t.Fatalf("Failed to generate token: %v", err)
+	}
+
+	handlerCalls := 0
+
+	 
+	handler := RoleMiddleware("admin")(
+		func(w http.ResponseWriter, r *http.Request){
+			handlerCalls++
+			w.WriteHeader(http.StatusOK)
+		},
+	)
+
+	req := httptest.NewRequest(
+		http.MethodGet,
+		"/protected",
+		nil,
+	)
+
+	req.Header.Set("Authorization", "Bearer " + token)
+
+	recorder := httptest.NewRecorder()
+
+	handler(recorder, req)
+
+	if recorder.Code != http.StatusForbidden {
+		t.Fatalf("Expected 403 Forbidden, got %d", recorder.Code,)
+	}
+	if handlerCalls != 0 {
+		t.Fatalf("Protected hanlder executed %d times; expected 0", handlerCalls)
+	}
+
+}
