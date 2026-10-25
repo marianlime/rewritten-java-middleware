@@ -11,7 +11,7 @@ import (
 func main() {
 	jwtSecret := os.Getenv("secret_key")
 	if len(jwtSecret) < 32 {
-		log.Fatal("Invalid jwt secret")
+		log.Fatal("secret_ley must be set and be at least 32 bytes")
 	}
 
 	mux := http.NewServeMux()
