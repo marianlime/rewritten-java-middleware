@@ -2,13 +2,17 @@ package main
 
 import (
 	"log"
-	"time"
-	"net/http"
 	auth "middleware/packages/authentication"
+	"net/http"
+	"os"
+	"time"
 )
 
 func main(){
-	
+	jwtSecret := os.Getenv("secret_key")
+	if(len(jwtSecret) < 32){
+		log.Fatal("Invalid jwt secret")
+	}
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request){

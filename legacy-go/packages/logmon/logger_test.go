@@ -75,7 +75,7 @@ func isolatedJSON(logOutput string) (map[string]interface{}, error) {
 func VerifyLogFormat(t *testing.T, logOutput, key, expectedValue string) {
 	logData, err := isolatedJSON(logOutput)
 	if err != nil {
-		t.Fatalf(err.Error())
+		t.Fatalf(err)
 	}
 
 	val, ok := logData[key]
