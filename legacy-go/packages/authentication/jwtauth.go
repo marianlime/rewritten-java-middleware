@@ -1,13 +1,12 @@
-
 package auth
 
 import (
+	"errors"
+	"github.com/golang-jwt/jwt/v5"
 	"net/http"
 	"os"
 	"strings"
 	"time"
-	"github.com/golang-jwt/jwt/v5"
-	"errors"
 )
 
 type CustomClaims struct {
@@ -15,7 +14,7 @@ type CustomClaims struct {
 	jwt.RegisteredClaims
 }
 
-func GenerateToken(role string) (string, error){
+func GenerateToken(role string) (string, error) {
 	secretKey := os.Getenv("secret_key")
 	if secretKey == "" {
 		return "", errors.New("secret key for JWT is not set")
@@ -23,11 +22,11 @@ func GenerateToken(role string) (string, error){
 	now := time.Now()
 
 	claims := CustomClaims{
-		Role: role, 
+		Role: role,
 		RegisteredClaims: jwt.RegisteredClaims{
-			Issuer: "opensecure",
-			Audience: jwt.ClaimStrings{"opensecure-api"},
-			IssuedAt: jwt.NewNumericDate(now),
+			Issuer:    "opensecure",
+			Audience:  jwt.ClaimStrings{"opensecure-api"},
+			IssuedAt:  jwt.NewNumericDate(now),
 			ExpiresAt: jwt.NewNumericDate(now.Add(3 * time.Hour)),
 		},
 	}
@@ -40,7 +39,7 @@ func RoleMiddleware(requiredRole string) func(http.HandlerFunc) http.HandlerFunc
 	return func(next http.HandlerFunc) http.HandlerFunc {
 		return func(w http.ResponseWriter, r *http.Request) {
 			parts := strings.Fields(r.Header.Get("Authorization"))
-			if len(parts) != 2 || !strings.EqualFold(parts[0], "Bearer"){
+			if len(parts) != 2 || !strings.EqualFold(parts[0], "Bearer") {
 				http.Error(w, "Unauthorized", http.StatusUnauthorized)
 				return
 			}
@@ -50,20 +49,20 @@ func RoleMiddleware(requiredRole string) func(http.HandlerFunc) http.HandlerFunc
 				http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 				return
 			}
-			token, err := jwt.ParseWithClaims(tokenString, &CustomClaims{}, 
-				func(token *jwt.Token) (any, error) {return []byte(secretKey), nil}, 
-				jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Alg(),}), 
-				jwt.WithExpirationRequired(), 
-				jwt.WithIssuer("opensecure"), 
+			token, err := jwt.ParseWithClaims(tokenString, &CustomClaims{},
+				func(token *jwt.Token) (any, error) { return []byte(secretKey), nil },
+				jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Alg()}),
+				jwt.WithExpirationRequired(),
+				jwt.WithIssuer("opensecure"),
 				jwt.WithAudience("opensecure-api"),
 			)
-			if err != nil{
+			if err != nil {
 				http.Error(w, "Unautharized", http.StatusUnauthorized)
 				return
 			}
 
 			if claims, ok := token.Claims.(*CustomClaims); ok && token.Valid {
-				if claims.Role == requiredRole{
+				if claims.Role == requiredRole {
 					next.ServeHTTP(w, r)
 					return
 				}

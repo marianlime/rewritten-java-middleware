@@ -12,11 +12,11 @@ import (
 	"testing"
 )
 
-func NewTestLogger(out io.Writer, level LogLevel, prefix string) * Logger {
+func NewTestLogger(out io.Writer, level LogLevel, prefix string) *Logger {
 	logger := log.New(out, prefix, log.LstdFlags)
 	return &Logger{
 		logger: logger,
-		Level: level,
+		Level:  level,
 		Prefix: prefix,
 	}
 }
@@ -75,7 +75,7 @@ func isolatedJSON(logOutput string) (map[string]interface{}, error) {
 func VerifyLogFormat(t *testing.T, logOutput, key, expectedValue string) {
 	logData, err := isolatedJSON(logOutput)
 	if err != nil {
-		t.Fatalf(err)
+		t.Fatal(err)
 	}
 
 	val, ok := logData[key]
@@ -113,7 +113,7 @@ func TestDEBUGStructured(t *testing.T) {
 	VerifyLogFormat(t, logOutput, "action", "debug")
 }
 
-func TestLogFileWriting(t *testing.T){
+func TestLogFileWriting(t *testing.T) {
 	tmpFile, err := os.CreateTemp("", "logs_*.log")
 	if err != nil {
 		t.Fatalf("Creating a temp file failed : %v", err)

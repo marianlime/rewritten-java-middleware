@@ -9,8 +9,8 @@ import (
 	"middleware/internal/policy"
 )
 
-func TransferEvaluationHandler (p policy.TransferPolicy, ) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request){
+func TransferEvaluationHandler(p policy.TransferPolicy) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			w.Header().Set("Allow", "POST")
 
@@ -29,7 +29,7 @@ func TransferEvaluationHandler (p policy.TransferPolicy, ) http.HandlerFunc {
 		)
 		decoder.DisallowUnknownFields()
 
-		if err := decoder.Decode(&req); err != nil{
+		if err := decoder.Decode(&req); err != nil {
 			http.Error(
 				w,
 				"Invalid request",
@@ -40,7 +40,7 @@ func TransferEvaluationHandler (p policy.TransferPolicy, ) http.HandlerFunc {
 
 		var extra any
 
-		if err := decoder.Decode(&extra); err != io.EOF{
+		if err := decoder.Decode(&extra); err != io.EOF {
 			http.Error(
 				w,
 				"Request must contain exactly one JSON object",
@@ -51,7 +51,7 @@ func TransferEvaluationHandler (p policy.TransferPolicy, ) http.HandlerFunc {
 
 		err := p.Evaluate(req)
 
-		switch{
+		switch {
 		case err == nil:
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusOK)
@@ -80,7 +80,7 @@ func TransferEvaluationHandler (p policy.TransferPolicy, ) http.HandlerFunc {
 				http.StatusForbidden,
 			)
 			return
-		
+
 		default:
 			http.Error(
 				w,

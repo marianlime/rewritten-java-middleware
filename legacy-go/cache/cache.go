@@ -1,4 +1,4 @@
-package cache 
+package cache
 
 import (
 	"sync"
@@ -6,7 +6,7 @@ import (
 )
 
 type CacheItem struct {
-	Value interface{}
+	Value      interface{}
 	Expiration int64
 	LastAccess int64
 }
@@ -14,30 +14,29 @@ type CacheItem struct {
 type InMemoryCache struct {
 	sync.RWMutex
 	items map[string]*CacheItem
-	size int
-
+	size  int
 }
 
 func NewInMemoryCache(size int) *InMemoryCache {
 	return &InMemoryCache{
 		items: make(map[string]*CacheItem),
-		size: size,
+		size:  size,
 	}
 }
 
-func (cache *InMemoryCache) Set(key string, value interface{}, duration time.Duration){
-	 cache.Lock()
-	 defer cache.Unlock()
+func (cache *InMemoryCache) Set(key string, value interface{}, duration time.Duration) {
+	cache.Lock()
+	defer cache.Unlock()
 
-	 if len(cache.items) >= cache.size {
+	if len(cache.items) >= cache.size {
 		cache.evictItems()
-	 }
+	}
 
-	 cache.items[key] = &CacheItem{
-		Value: value, 
+	cache.items[key] = &CacheItem{
+		Value:      value,
 		Expiration: time.Now().Add(duration).UnixNano(),
 		LastAccess: time.Now().UnixNano(),
-	 }
+	}
 }
 
 func (cache *InMemoryCache) Get(key string) (interface{}, bool) {

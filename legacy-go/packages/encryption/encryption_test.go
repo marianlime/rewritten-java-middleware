@@ -7,8 +7,7 @@ import (
 	"testing"
 )
 
-
-func TestKeyGenerator(t *testing.T){
+func TestKeyGenerator(t *testing.T) {
 	os.Remove(keyFilepath)
 	KeyGenerator()
 
@@ -21,7 +20,7 @@ func TestKeyGenerator(t *testing.T){
 	}
 }
 
-func TestDataEncryptionAndDecryption(t *testing.T){
+func TestDataEncryptionAndDecryption(t *testing.T) {
 	originalText := []byte("Message")
 	KeyGenerator()
 	key, _ := RetrieveKey()
@@ -32,7 +31,7 @@ func TestDataEncryptionAndDecryption(t *testing.T){
 		t.Fatalf("Data Encryption has failed : %v", err)
 	}
 	decryptedText, err := DataDecryption(cipherText, key)
-	if err != nil{
+	if err != nil {
 		t.Fatalf("Data Decryption has failed: %v", err)
 	}
 
@@ -41,7 +40,7 @@ func TestDataEncryptionAndDecryption(t *testing.T){
 	}
 }
 
-func TestInvalidKeyLength(t *testing.T){
+func TestInvalidKeyLength(t *testing.T) {
 	originalText := []byte("Message")
 	invalidKey := []byte("notakey")
 
@@ -51,26 +50,26 @@ func TestInvalidKeyLength(t *testing.T){
 	}
 
 	_, err = DataDecryption(originalText, invalidKey)
-	if err == nil{
+	if err == nil {
 		t.Errorf("DataDecryption has failed with key provided")
 	}
 }
 
-func TestUniqueCiphertextEncryption (t *testing.T){
+func TestUniqueCiphertextEncryption(t *testing.T) {
 	plainText := []byte("Secret Message")
 	KeyGenerator()
 	key, err := RetrieveKey()
 	defer os.Remove(keyFilepath)
-	if err != nil{
+	if err != nil {
 		t.Fatalf("Failed to retrieve encryption key: %v", err)
 	}
 
 	ciphertexts := make(map[string]bool)
 	iterations := 100
 
-	for i := 0; i <iterations; i++{
+	for i := 0; i < iterations; i++ {
 		ciphertext, err := DataEncryption(plainText, key)
-		if err != nil{
+		if err != nil {
 			t.Fatalf("Encryption failed: %v", err)
 		}
 		CipheredText := base64.StdEncoding.EncodeToString(ciphertext)

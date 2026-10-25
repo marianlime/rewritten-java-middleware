@@ -5,15 +5,16 @@ import (
 )
 
 type TransferRequest struct {
-	SourceAccount string `json:"source_account"`
+	SourceAccount      string `json:"source_account"`
 	DestinationAccount string `json:"destination_account"`
-	AmountMinor int64 `json:"amount_minor"`
-	Currency string `json:"currency"`
+	AmountMinor        int64  `json:"amount_minor"`
+	Currency           string `json:"currency"`
 }
 
 type TransferPolicy struct {
 	MaxAmountMinor int64
 }
+
 const (
 	CurrencyGBP = "GBP"
 	CurrencyUSD = "USD"
@@ -21,18 +22,18 @@ const (
 )
 
 var (
-	ErrInvalidAmount = errors.New("amount must be positive")
+	ErrInvalidAmount      = errors.New("amount must be positive")
 	ErrUnsuportedCurrency = errors.New("unsuported currency")
-	ErrLimitExceed = errors.New("transfer exceeds permitted limit")
+	ErrLimitExceed        = errors.New("transfer exceeds permitted limit")
 )
 
-func(p TransferPolicy) Evaluate(req TransferRequest) error {
+func (p TransferPolicy) Evaluate(req TransferRequest) error {
 	// 1. Reject non positive amount
-	if req.AmountMinor <= 0{
+	if req.AmountMinor <= 0 {
 		return ErrInvalidAmount
 	}
 
-	if req.Currency != CurrencyGBP{
+	if req.Currency != CurrencyGBP {
 		return ErrUnsuportedCurrency
 	}
 
@@ -40,6 +41,5 @@ func(p TransferPolicy) Evaluate(req TransferRequest) error {
 		return ErrLimitExceed
 	}
 
-	
 	return nil
 }

@@ -9,7 +9,7 @@ import (
 
 func startMockServer() (*httptest.Server, string) {
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-	_, _ = w.Write([]byte(r.URL.Path))
+		_, _ = w.Write([]byte(r.URL.Path))
 	})
 	server := httptest.NewServer(handler)
 

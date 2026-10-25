@@ -1,17 +1,19 @@
 package auth
 
 import (
+	"errors"
+	"github.com/golang-jwt/jwt/v5"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"testing"
-	"errors"
 	"time"
-	"github.com/golang-jwt/jwt/v5"
 )
 
+const testSecret = "opensecure-test-secret-32-byte-minimum"
+
 func TestGenerateToken(t *testing.T) {
-	secretKey := "DiI0sUuhUX"
+	secretKey := testSecret
 	os.Setenv("secret_key", secretKey)
 	defer os.Unsetenv("secret_key")
 
@@ -23,29 +25,29 @@ func TestGenerateToken(t *testing.T) {
 		t.Fatalf("Generated token is empty")
 	}
 }
-func TestGenerateTokenWithDifferentRoles(t *testing.T){
-	secretKey := "xTFSslQRnH"
+func TestGenerateTokenWithDifferentRoles(t *testing.T) {
+	secretKey := testSecret
 	os.Setenv("secret_key", secretKey)
 	defer os.Unsetenv("secret_key")
 
 	roles := []string{"admin", "employee", "customer"}
 
 	for _, role := range roles {
-		t.Run("role = "+ role, func(t *testing.T){
+		t.Run("role = "+role, func(t *testing.T) {
 			tokenString, err := GenerateToken(role)
 			if err != nil {
 				t.Fatalf("Failed to generate token for role %s: %v", role, err)
 			}
-			token, err:= jwt.ParseWithClaims(tokenString, &CustomClaims{}, func(token *jwt.Token) (interface{}, error){
+			token, err := jwt.ParseWithClaims(tokenString, &CustomClaims{}, func(token *jwt.Token) (interface{}, error) {
 				return []byte(secretKey), nil
 			})
 			if err != nil {
 				t.Fatalf("Failed to parse token: %v", err)
 			}
-			if claims, ok := token.Claims.(*CustomClaims); ok && token.Valid{
+			if claims, ok := token.Claims.(*CustomClaims); ok && token.Valid {
 				if claims.Role != role {
 					t.Errorf("Expected role %s, got %s", role, claims.Role)
-				} 
+				}
 			} else {
 				t.Fatalf("Token parsing failed/Token is invalid")
 			}
@@ -53,46 +55,44 @@ func TestGenerateTokenWithDifferentRoles(t *testing.T){
 	}
 }
 
-func TestTokenExpiry(t *testing.T){
-	secretKey := "iJEwgdEGe2"
+func TestTokenExpiry(t *testing.T) {
+	secretKey := testSecret
 	t.Setenv("secret_key", secretKey)
-	
 
 	claims := CustomClaims{
 		Role: "admin",
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(
 				time.Now().Add(-time.Hour),
-			),	
+			),
 		},
 	}
 
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims, )
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	tokenString, err := token.SignedString([]byte(secretKey))
-	if err != nil{
+	if err != nil {
 		t.Fatalf("Failed to sign token: %v", err)
 	}
-	
 
 	_, err = jwt.ParseWithClaims(
-		 tokenString,
-		 &CustomClaims{}, 
-		 func(token *jwt.Token) (any, error){
+		tokenString,
+		&CustomClaims{},
+		func(token *jwt.Token) (any, error) {
 			return []byte(secretKey), nil
-	},  
-	jwt.WithValidMethods([]string{
-		jwt.SigningMethodHS256.Alg(),
-	}),
+		},
+		jwt.WithValidMethods([]string{
+			jwt.SigningMethodHS256.Alg(),
+		}),
 		jwt.WithExpirationRequired(),
 	)
-	if !errors.Is(err, jwt.ErrTokenExpired){
+	if !errors.Is(err, jwt.ErrTokenExpired) {
 		t.Fatalf("Expected token expiration error, got %v", err)
 	}
-	
+
 }
 
 func TestRoleMiddleware(t *testing.T) {
-	os.Setenv("secret_key", "testsecret")
+	os.Setenv("secret_key", testSecret)
 	defer os.Unsetenv("secret_key")
 
 	protectedHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -131,7 +131,7 @@ func TestRoleMiddleware(t *testing.T) {
 	}
 }
 
-func TestAdminAuthorization(t *testing.T){
+func TestAdminAuthorization(t *testing.T) {
 	t.Setenv("secret_key", "this-is-a-test-secret-with-32-plus-bytes")
 
 	token, err := GenerateToken("admin")
@@ -140,7 +140,7 @@ func TestAdminAuthorization(t *testing.T){
 	}
 
 	handler := RoleMiddleware("admin")(
-		func(w http.ResponseWriter, r *http.Request){
+		func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusOK)
 		},
 	)
@@ -165,19 +165,18 @@ func TestAdminAuthorization(t *testing.T){
 	}
 }
 
-func TestViewerAuthorization(t *testing.T){
+func TestViewerAuthorization(t *testing.T) {
 	t.Setenv("secret_key", "this-is-a-secret-key-with-32-plus-bytes")
 
 	token, err := GenerateToken("viewer")
-	if err != nil{
+	if err != nil {
 		t.Fatalf("Failed to generate token: %v", err)
 	}
 
 	handlerCalls := 0
 
-	 
 	handler := RoleMiddleware("admin")(
-		func(w http.ResponseWriter, r *http.Request){
+		func(w http.ResponseWriter, r *http.Request) {
 			handlerCalls++
 			w.WriteHeader(http.StatusOK)
 		},
@@ -189,14 +188,14 @@ func TestViewerAuthorization(t *testing.T){
 		nil,
 	)
 
-	req.Header.Set("Authorization", "Bearer " + token)
+	req.Header.Set("Authorization", "Bearer "+token)
 
 	recorder := httptest.NewRecorder()
 
 	handler(recorder, req)
 
 	if recorder.Code != http.StatusForbidden {
-		t.Fatalf("Expected 403 Forbidden, got %d", recorder.Code,)
+		t.Fatalf("Expected 403 Forbidden, got %d", recorder.Code)
 	}
 	if handlerCalls != 0 {
 		t.Fatalf("Protected hanlder executed %d times; expected 0", handlerCalls)

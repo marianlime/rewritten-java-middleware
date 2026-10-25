@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-func TestSetAndGet(t *testing.T){
+func TestSetAndGet(t *testing.T) {
 	cache := NewInMemoryCache(5)
 	key := "keyXYZ"
 	value := "valueXYZ"
@@ -18,7 +18,7 @@ func TestSetAndGet(t *testing.T){
 	}
 }
 
-func TestExpiration(t *testing.T){
+func TestExpiration(t *testing.T) {
 	cache := NewInMemoryCache(8)
 	key := "keyXYZ"
 	value := "valueXYZ"
@@ -26,12 +26,12 @@ func TestExpiration(t *testing.T){
 
 	time.Sleep(2 * time.Millisecond)
 
-	if _, found := cache.Get(key); found{
+	if _, found := cache.Get(key); found {
 		t.Errorf("Expected items expire")
 	}
 }
 
-func TestEviction(t *testing.T){
+func TestEviction(t *testing.T) {
 	cache := NewInMemoryCache(1)
 	key1 := "keyXYZ"
 	value1 := "valueXYZ"
@@ -41,10 +41,10 @@ func TestEviction(t *testing.T){
 	cache.Set(key2, value2, 9*time.Second)
 	if _, found := cache.Get(key1); found {
 		t.Errorf("Expected key1 to be removed")
-	}	
+	}
 }
 
-func TestDelete (t *testing.T) {
+func TestDelete(t *testing.T) {
 	cache := NewInMemoryCache(1)
 	key := "keyXYZ"
 	value := "valueXYZ"
@@ -69,7 +69,7 @@ func TestFlush(t *testing.T) {
 	}
 }
 
-func TestAutomaticEvictionFunction (t *testing.T){
+func TestAutomaticEvictionFunction(t *testing.T) {
 	cache := NewInMemoryCache(5)
 	cache.Set("keyXYZ", "valueXYZ", 1*time.Millisecond)
 	time.Sleep(10 * time.Millisecond)
@@ -81,13 +81,13 @@ func TestAutomaticEvictionFunction (t *testing.T){
 	}
 }
 
-func TestCacheSize(t *testing.T){
+func TestCacheSize(t *testing.T) {
 	cacheSize := 2
 	cache := NewInMemoryCache(cacheSize)
 
-	for i := 0; i < cacheSize + 1; i++ {
-		key:= fmt.Sprintf("key%d", i)
-		cache.Set(key, fmt.Sprintf("value%d", i) , 1*time.Minute)
+	for i := 0; i < cacheSize+1; i++ {
+		key := fmt.Sprintf("key%d", i)
+		cache.Set(key, fmt.Sprintf("value%d", i), 1*time.Minute)
 	}
 	if len(cache.items) > cacheSize {
 		t.Errorf("Cache size limit exceeded")

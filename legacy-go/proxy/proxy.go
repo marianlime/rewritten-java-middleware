@@ -32,7 +32,7 @@ func NewProxy(target string) (*Proxy, error) {
 }
 
 func (p *Proxy) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	forwardReq, err := http.NewRequest(req.Method, p.targetURL.String() + req.URL.Path, req.Body)
+	forwardReq, err := http.NewRequest(req.Method, p.targetURL.String()+req.URL.Path, req.Body)
 	if err != nil {
 		http.Error(w, "Failed to create request", http.StatusInternalServerError)
 		return
@@ -40,7 +40,7 @@ func (p *Proxy) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	forwardReq.RequestURI = ""
 
 	forwardReq.Header = make(http.Header)
-	for k, vv := range req.Header{
+	for k, vv := range req.Header {
 		for _, v := range vv {
 			forwardReq.Header.Add(k, v)
 		}

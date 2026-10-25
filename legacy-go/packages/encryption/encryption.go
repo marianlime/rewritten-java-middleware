@@ -19,10 +19,10 @@ const keyFilepath = "./encryption_keys.txt"
 
 // The Key generator method generates a AES-256 encryption key and stores it in a text file with predefined roles.
 // The method returns an error for when the generation of the key has failed or writing it into the file has failed.
-func KeyGenerator()  error{
+func KeyGenerator() error {
 	key := make([]byte, 32)
 	if _, err := rand.Read(key); err != nil {
-		 return fmt.Errorf("failed to create new key: %v", err)
+		return fmt.Errorf("failed to create new key: %v", err)
 	}
 
 	keyHex := hex.EncodeToString(key)
@@ -32,10 +32,10 @@ func KeyGenerator()  error{
 	return nil
 }
 
-func RetrieveKey() ([]byte, error){
+func RetrieveKey() ([]byte, error) {
 	keyHex, err := os.ReadFile(keyFilepath)
 	if err != nil {
-		if os.IsNotExist(err){
+		if os.IsNotExist(err) {
 			fmt.Println("Key file not found, generating a new key")
 			if err := KeyGenerator(); err != nil {
 				return nil, fmt.Errorf("Failed to generate key: %v", err)
