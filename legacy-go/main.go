@@ -3,7 +3,6 @@ package main
 import (
 	"log"
 	"time"
-	"middleware/packages/encryption"
 	"net/http"
 	auth "middleware/packages/authentication"
 )
@@ -23,8 +22,6 @@ func main(){
 			},
 		),
 	)
-
-	mux.HandleFunc("/encrypt", encryption.HandleEncryption)
 	
 	server := &http.Server{
 		Addr: ":8080",

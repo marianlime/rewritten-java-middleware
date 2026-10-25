@@ -23,7 +23,7 @@ type Logger struct{
 }
 
 func NewLogger(level LogLevel, prefix string) *Logger {
-	logFile, err := os.OpenFile("logs.log", os.O_CREATE|os.O_APPEND|os.O_WRONLY, 06666)
+	logFile, err := os.OpenFile("logs.log", os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
 	if err != nil {
 		log.Fatalf("error opening file: %v", err)
 	}

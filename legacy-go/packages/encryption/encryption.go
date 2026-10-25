@@ -11,7 +11,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"os"
 )
@@ -27,21 +26,21 @@ func KeyGenerator()  error{
 	}
 
 	keyHex := hex.EncodeToString(key)
-	if err := ioutil.WriteFile(keyFilepath, []byte(keyHex), 0600); err != nil {
+	if err := os.WriteFile(keyFilepath, []byte(keyHex), 0600); err != nil {
 		return fmt.Errorf("failed to write key to file: %v", err)
 	}
 	return nil
 }
 
 func RetrieveKey() ([]byte, error){
-	keyHex, err := ioutil.ReadFile(keyFilepath)
+	keyHex, err := os.ReadFile(keyFilepath)
 	if err != nil {
 		if os.IsNotExist(err){
 			fmt.Println("Key file not found, generating a new key")
 			if err := KeyGenerator(); err != nil {
 				return nil, fmt.Errorf("Failed to generate key: %v", err)
 			}
-			keyHex, err = ioutil.ReadFile(keyFilepath)
+			keyHex, err = os.ReadFile(keyFilepath)
 			if err != nil {
 				return nil, fmt.Errorf("failed to read the new key : %v", err)
 			}

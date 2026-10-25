@@ -1,0 +1,6 @@
+encryption_keys.txt
+*.log
+.env*
+node_modules/
+dist/
+
